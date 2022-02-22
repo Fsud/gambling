@@ -2,10 +2,14 @@
 pragma solidity ^0.8.0;
 import "./lib/UniswapV2Library.sol";
 import "./lib/UniswapV2OracleLibrary.sol";
+import "./lib/IOracle.sol";
 
 contract Gambling {
 
-        
+    //-----
+    //第一版原本实现的是可以打赌任意token pair。后面发现无论是uniswap oracle，还是 chainlink oracle
+    //都没有找到方法可以通用的获取任意token pair或 任意币 的价格，所以暂且仅实现 DAI/WETH交易对
+    //---------    
     // 更通用的方案可以实现合约服用，支持存储多个赌局，暂未实现
     // mapping (address => Game) pairMap;
 
@@ -13,17 +17,18 @@ contract Gambling {
     //     address token0;
     //     address token1;
     //     address endTime;
-
     //     address player0;
     //     address player1;
-
     //     uint256 amount;
     // }
+    //---------
 
-    address constant FACTORY = "";
-    address token0;
-    address token1;
-    uint256 gamblingPrice;
+    IOracle oracle;
+    address token0; // eth address
+    address token1; // dai address
+
+
+    uint256 gamblingPrice; //每eth价值多少dai
     uint256 endTime;
     bool player0bigger; //player0下注的是否是“>=” gamblingPrice
 
@@ -31,30 +36,50 @@ contract Gambling {
     address player1;
     uint256 amount;
 
-    address pair;
 
-    //玩家0开设赌局
-    constructor(address _token0, address _token1, uint256 _endTime, uint256 _gamblingPrice, bool _bigger) payable {
-        require(msg.value >0 , "creater amount less than 0");
-        require(block.timestamp < _endTime, "endTime has reached");
-        //传入的两个token需按大小排列，这样gambling价格就是token0/token1的比值，也方便uniswap pair获取
-        require(_token0 < _token1, "token0 and token1 should diffrent and in order");
+    event Start(address sender, address _token0, address _token1, uint256 _endTime, uint256 _gamblingPrice,
+        bool _bigger, uint256 amount);
+
+    event Join(address sender, uint256 amount);
+
+    event Withdraw(address winner, uint256 price, uint256 amount);
+
+    event Exit(address sender, uint256 amount);
+
+    constructor(address _oracle, address _token0, address _token1){
+        oracle = IOracle(_oracle);
         token0 = _token0;
         token1 = _token1;
+    }
+
+    //玩家0开设赌局
+    function start(uint256 _endTime, uint256 _gamblingPrice,
+        bool _bigger) public payable {
+        require(player0 == address(0) , "gambling has start");
+        require(msg.value >0 , "creater amount less than 0");
+        require(block.timestamp < _endTime, "endTime has reached");
         endTime = _endTime;
         player0bigger = _bigger;
         gamblingPrice = _gamblingPrice;
-        pair = UniswapV2Library.pairFor(FACTORY, token0, token1);
         amount = msg.value;
         player0 = msg.sender;
+        oracle.update();
+        emit Start(player0, token0, token1, _endTime, _gamblingPrice, _bigger, amount);
+    }
+
+    //查询赌局金额
+    function getAmount() public view returns (uint){
+        return amount;
     }
 
     //玩家1加入赌局
     function join() payable public{
-        require(player1 == address(0) , "player1 has joined");
-        require(msg.value == amount , "joiner amount wrong");
         require(block.timestamp < endTime, "endTime has reached");
+        require(player1 == address(0) , "player1 has joined");
+        require(msg.value < amount , "joiner amount wrong");
         player1 = msg.sender;
+        oracle.update();
+        emit Join(player1, msg.value);
     }
 
     //赢家提款
@@ -62,28 +87,33 @@ contract Gambling {
         require(block.timestamp > endTime, "endTime not reached");
         require(player1 != address(0) , "player1 not join, please exit");
         require(address(this).balance > 0, "no balance");
-        //v2瞬时价格，会被闪电攻击，考虑使用v3的接口替换
-        (
-            uint256 price0Cumulative,
-            uint256 price1Cumulative,
-            uint32 blockTimestamp
-        ) = UniswapV2OracleLibrary.currentCumulativePrices(pair);
 
+        uint price = oracle.consult(token0, token1, 1e18);
+
+        
         address winner;
-        if(price0Cumulative >= gamblingPrice){
+        uint256 winAmount = address(this).balance;
+        if(price >= gamblingPrice){
             winner = player0bigger ? player0 : player1;
         }else{
             winner = player0bigger ? player1 : player0;
         }
-        (bool sent,) = winner.call{value:address(this).balance}("");
+        (bool sent,) = winner.call{value:winAmount}("");
         require(sent, "failed to send Ether");
+        player0 = address(0);
+        player1 = address(0);
+        emit Withdraw(winner, price, winAmount);
     }
 
     //玩家0退出
     function exit() public{
         require(player0 == msg.sender , "only player0 can exit");
         require(player1 == address(0) , "player1 has joined");
-        (bool sent,) = player0.call{value:address(this).balance}("");
+        uint256 exitAmount = address(this).balance;
+        (bool sent,) = player0.call{value:exitAmount}("");
         require(sent, "failed to send Ether");
+        player0 = address(0);
+        player1 = address(0);
+        emit Exit(player0, exitAmount);
     }
 }

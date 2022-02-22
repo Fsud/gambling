@@ -1,0 +1,12 @@
+b
+b = ethers.provider.getBlock(10212234)
+await b = ethers.provider.getBlock(10212234)
+ethers.provider.getBlock(10212234)
+ethers.provider.getBlock(10000000)
+ethers.provider.getBlock
+ethers.provider
+ethers.provider.block.timestamp
+ethers.provider.blockNumber
+ethers.provider
+block.timestamp
+ethers.provider.blockNumber

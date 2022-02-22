@@ -1,7 +1,8 @@
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.5.0;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+import './FixedPoint.sol';
 
 // library with helper methods for oracles that are concerned with computing average prices
 library UniswapV2OracleLibrary {
@@ -31,13 +32,5 @@ library UniswapV2OracleLibrary {
             // counterfactual
             price1Cumulative += uint(FixedPoint.fraction(reserve0, reserve1)._x) * timeElapsed;
         }
-    }
-
-    function pairFor(
-        address factory,
-        address tokenA,
-        address tokenB
-    ) external pure returns (address lpt) {
-        return UniswapV2Library.pairFor(factory, tokenA, tokenB);
     }
 }

@@ -75,8 +75,9 @@ contract Gambling {
     //玩家1加入赌局
     function join() payable public{
         require(block.timestamp < endTime, "endTime has reached");
+        require(player0 != msg.sender , "player1 is palyer0");
         require(player1 == address(0) , "player1 has joined");
-        require(msg.value < amount , "joiner amount wrong");
+        require(msg.value == amount , "joiner amount wrong");
         player1 = msg.sender;
         oracle.update();
         emit Join(player1, msg.value);

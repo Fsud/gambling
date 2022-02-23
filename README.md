@@ -21,12 +21,12 @@ kovan 部署文件中，配置的是 link/usd 价格。
 已部署的合约地址：
 ```
 rinkeby uniswap：
-Oracle address:  0x5af7fd2D346a4215FaCFED913Bedd08C0e6E6D01
-Gambling address:  0xbE74A12EcA3cF2c9EE157144bEb44B91362550C7
+Oracle address:  0x315f69E109Cc5D2bb1565BeD8bAD9E296C7626b4
+Gambling address:  0x9fCFbAEC9A1EDf90358354F22E670de63E790D8C
 
 kovan chainlink：
-ChainLink Oracle address:  0xFD15a0C8e17dBF0019784225567b7a454045b383
-Gambling address:  0x581abe9e115EAb9Cb69F896C24Fc8cCe3380FA80
+ChainLink Oracle address:  0xa01bBBaa1eA6B02bB11afDeAe786aA1c2f9Dcea0
+Gambling address:  0x00572610157B96562a37A3eD6CCf0043937a701F
 
 ```
 

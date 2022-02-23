@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/fankun/scaffold-learn/gambling/contracts/Gambling.sol": {
-      "lastModificationDate": 1645556574242,
-      "contentHash": "80a6672021bb6031803f517a526d63c8",
+      "lastModificationDate": 1645593907598,
+      "contentHash": "f29f7bfd3ef501b578da39ce343f934b",
       "sourceName": "contracts/Gambling.sol",
       "solcConfig": {
         "version": "0.8.0",
